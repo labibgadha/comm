@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Send Message to ESP32</title>
+  <style>
+    body {
+      background: #0f2027;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    input, button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    input {
+      width: 300px;
+    }
+
+    button {
+      background: #00c6ff;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #0072ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>💌 Send Message to ESP32</h1>
+  <input type="text" id="messageInput" placeholder="Type your message..." maxlength="32">
+  <button onclick="sendMessage()">Send</button>
+
+  <script type="module">
+    // Your Firebase config
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCGYGYFp0iZWyRNXeeODW-DAus_nLu-irc",
+    authDomain: "esp32-5732a.firebaseapp.com",
+    databaseURL: "https://esp32-5732a-default-rtdb.firebaseio.com",
+    projectId: "esp32-5732a",
+    storageBucket: "esp32-5732a.firebasestorage.app",
+    messagingSenderId: "541572294985",
+    appId: "1:541572294985:web:ed0931071cb05f839c1298",
+    measurementId: "G-Q36TSRVNKQ"
+  };
+
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.sendMessage = () => {
+      const message = document.getElementById("messageInput").value;
+      if (message.trim() === "") {
+        alert("Message cannot be empty!");
+        return;
+      }
+
+      // Save to database
+      set(ref(db, 'message'), message)
+        .then(() => {
+          alert("✅ Message sent!");
+          document.getElementById("messageInput").value = "";
+        })
+        .catch(err => alert("❌ Error: " + err));
+    };
+  </script>
+</body>
+</html>
