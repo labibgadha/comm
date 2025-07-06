@@ -2,83 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Send Message to ESP32</title>
+  <title>Send Message to Faija Baby</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background: #0f2027;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
+      background: #f2f2f2;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
     }
-
-    input, button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      margin: 10px;
+    h1 {
+      color: #333;
+    }
+    input[type="text"] {
+      width: 80%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 20px 0;
       font-size: 16px;
     }
-
-    input {
-      width: 300px;
-    }
-
     button {
-      background: #00c6ff;
+      padding: 10px 20px;
+      background-color: #007BFF;
       color: white;
+      font-size: 16px;
+      border: none;
       cursor: pointer;
-      transition: 0.3s ease;
     }
-
     button:hover {
-      background: #0072ff;
+      background-color: #0056b3;
+    }
+    .status {
+      margin-top: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>💌 Send Message to ESP32</h1>
-  <input type="text" id="messageInput" placeholder="Type your message..." maxlength="32">
+
+  <h1>Send Message to Send Message to Faija Baby 😘</h1>
+  <input type="text" id="messageInput" placeholder="Type your message...">
+  <br>
   <button onclick="sendMessage()">Send</button>
 
+  <div class="status" id="statusText"></div>
+
+  <!-- Firebase App SDK -->
   <script type="module">
-    // Your Firebase config
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCGYGYFp0iZWyRNXeeODW-DAus_nLu-irc",
-    authDomain: "esp32-5732a.firebaseapp.com",
-    databaseURL: "https://esp32-5732a-default-rtdb.firebaseio.com",
-    projectId: "esp32-5732a",
-    storageBucket: "esp32-5732a.firebasestorage.app",
-    messagingSenderId: "541572294985",
-    appId: "1:541572294985:web:ed0931071cb05f839c1298",
-    measurementId: "G-Q36TSRVNKQ"
-  };
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGYGYFp0iZWyRNXeeODW-DAus_nLu-irc",
+      authDomain: "esp32-5732a.firebaseapp.com",
+      databaseURL: "https://esp32-5732a-default-rtdb.firebaseio.com",
+      projectId: "esp32-5732a",
+      storageBucket: "esp32-5732a.appspot.com",
+      messagingSenderId: "541572294985",
+      appId: "1:541572294985:web:ed0931071cb05f839c1298"
+    };
 
-
+    // 🔌 Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.sendMessage = () => {
-      const message = document.getElementById("messageInput").value;
-      if (message.trim() === "") {
-        alert("Message cannot be empty!");
+    // 🔄 Send message function
+    window.sendMessage = function () {
+      const msg = document.getElementById("messageInput").value.trim();
+      if (msg === "") {
+        document.getElementById("statusText").innerText = "⚠️ Message can't be empty!";
         return;
       }
 
-      // Save to database
-      set(ref(db, 'message'), message)
+      set(ref(db, "/message"), msg)
         .then(() => {
-          alert("✅ Message sent!");
+          document.getElementById("statusText").innerText = " Message sent!";
           document.getElementById("messageInput").value = "";
         })
-        .catch(err => alert("❌ Error: " + err));
+        .catch((error) => {
+          document.getElementById("statusText").innerText = "❌ Error: " + error.message;
+        });
     };
   </script>
+
 </body>
 </html>
