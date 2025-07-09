@@ -1,59 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Send Message to Faija Baby</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Message to Gadha Labib</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
-      background: #f2f2f2;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 50px;
+      background: #f4f4f4;
+      padding: 40px;
     }
-    h1 {
-      color: #333;
-    }
-    input[type="text"] {
-      width: 80%;
-      max-width: 400px;
+
+    input {
       padding: 10px;
-      margin: 20px 0;
+      width: 60%;
       font-size: 16px;
     }
+
     button {
       padding: 10px 20px;
-      background-color: #007BFF;
-      color: white;
       font-size: 16px;
-      border: none;
+      margin-top: 10px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #0056b3;
+
+    .log {
+      margin-top: 30px;
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
     }
-    .status {
-      margin-top: 20px;
-      font-weight: bold;
+
+    .log h3 {
+      margin-bottom: 15px;
+    }
+
+    #messageHistory li {
+      background: #f9f9f9;
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #2196F3;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      list-style: none;
     }
   </style>
 </head>
 <body>
 
   <h1>Send Message to Gadha Labib</h1>
-  <input type="text" id="messageInput" placeholder="Type your message...">
+  <input type="text" id="messageInput" placeholder="Type your message..." />
   <br>
   <button onclick="sendMessage()">Send</button>
+  <p id="status"></p>
 
-  <div class="status" id="statusText"></div>
+  <div class="log">
+    <h3>Last 10 Messages</h3>
+    <ul id="messageHistory"></ul>
+  </div>
 
-  <!-- Firebase App SDK -->
+  <!-- Firebase SDKs -->
   <script type="module">
-    // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCGYGYFp0iZWyRNXeeODW-DAus_nLu-irc",
       authDomain: "esp32-5732a.firebaseapp.com",
@@ -64,28 +79,56 @@
       appId: "1:541572294985:web:ed0931071cb05f839c1298"
     };
 
-    // 🔌 Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 🔄 Send message function
-    window.sendMessage = function () {
-      const msg = document.getElementById("messageInput").value.trim();
-      if (msg === "") {
-        document.getElementById("statusText").innerText = "⚠️ Message can't be empty!";
-        return;
+    async function sendMessage() {
+      const newMsg = document.getElementById("messageInput").value.trim();
+      if (!newMsg) return;
+
+      const status = document.getElementById("status");
+      try {
+        const snap = await get(ref(db));
+        const data = snap.exists() ? snap.val() : {};
+
+        let updates = {};
+        for (let i = 9; i >= 1; i--) {
+          updates["/messageOld" + (i + 1)] = data["messageOld" + i] || "";
+        }
+        updates["/messageOld1"] = data["message"] || "";
+        updates["/message"] = newMsg;
+
+        await update(ref(db), updates);
+
+        status.textContent = "✅ Message sent!";
+        document.getElementById("messageInput").value = "";
+        showMessages();
+      } catch (err) {
+        status.textContent = "❌ Error: " + err.message;
       }
+    }
+    window.sendMessage = sendMessage;
 
-      set(ref(db, "/message"), msg)
-        .then(() => {
-          document.getElementById("statusText").innerText = " Message sent!";
-          document.getElementById("messageInput").value = "";
-        })
-        .catch((error) => {
-          document.getElementById("statusText").innerText = "❌ Error: " + error.message;
-        });
-    };
+    async function showMessages() {
+      const snap = await get(ref(db));
+      const data = snap.exists() ? snap.val() : {};
+      const history = document.getElementById("messageHistory");
+      history.innerHTML = "";
+
+      const all = [data.message].concat(
+        [...Array(9)].map((_, i) => data["messageOld" + (i + 1)] || "")
+      );
+
+      all.forEach((msg) => {
+        if (msg) {
+          const li = document.createElement("li");
+          li.textContent = msg;
+          history.appendChild(li);
+        }
+      });
+    }
+
+    showMessages();
   </script>
-
 </body>
 </html>
