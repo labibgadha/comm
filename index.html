@@ -40,14 +40,19 @@
       margin-bottom: 15px;
     }
 
-    #messageHistory li {
+    .msgItem {
       background: #f9f9f9;
       margin-bottom: 12px;
       padding: 10px;
       border-radius: 5px;
       border-left: 4px solid #2196F3;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      list-style: none;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: #777;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -61,13 +66,13 @@
 
   <div class="log">
     <h3>Last 10 Messages</h3>
-    <ul id="messageHistory"></ul>
+    <div id="messageHistory"></div>
   </div>
 
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCGYGYFp0iZWyRNXeeODW-DAus_nLu-irc",
@@ -87,16 +92,26 @@
       if (!newMsg) return;
 
       const status = document.getElementById("status");
+
       try {
         const snap = await get(ref(db));
         const data = snap.exists() ? snap.val() : {};
 
         let updates = {};
+
+        // Shift messages and timestamps
         for (let i = 9; i >= 1; i--) {
           updates["/messageOld" + (i + 1)] = data["messageOld" + i] || "";
+          updates["/timeOld" + (i + 1)] = data["timeOld" + i] || "";
         }
+
+        // Current becomes old
         updates["/messageOld1"] = data["message"] || "";
+        updates["/timeOld1"] = data["time"] || "";
+
+        // New message + time
         updates["/message"] = newMsg;
+        updates["/time"] = new Date().toLocaleString("en-GB");
 
         await update(ref(db), updates);
 
@@ -115,15 +130,19 @@
       const history = document.getElementById("messageHistory");
       history.innerHTML = "";
 
-      const all = [data.message].concat(
-        [...Array(9)].map((_, i) => data["messageOld" + (i + 1)] || "")
+      const all = [{ msg: data.message, time: data.time }].concat(
+        [...Array(9)].map((_, i) => ({
+          msg: data["messageOld" + (i + 1)] || "",
+          time: data["timeOld" + (i + 1)] || ""
+        }))
       );
 
-      all.forEach((msg) => {
+      all.forEach(({ msg, time }) => {
         if (msg) {
-          const li = document.createElement("li");
-          li.textContent = msg;
-          history.appendChild(li);
+          const div = document.createElement("div");
+          div.className = "msgItem";
+          div.innerHTML = `<strong>${msg}</strong><div class="timestamp">${time}</div>`;
+          history.appendChild(div);
         }
       });
     }
