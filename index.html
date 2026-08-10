@@ -1,153 +1,909 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Send Message to Robot Ratri</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Moja v3.6</title>
+
+  <!-- MQTT WebSocket Library -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f4f4f4;
-      padding: 40px;
+      margin: 0;
+      min-height: 100vh;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at 50% 0%,
+          #193b2d 0%,
+          #08100c 45%,
+          #030504 100%
+        );
+
+      color: white;
     }
 
-    input {
-      padding: 10px;
-      width: 60%;
-      font-size: 16px;
+    /* =========================
+       MAIN CARD
+       ========================= */
+
+    .container {
+      width: min(520px, 92%);
+
+      padding: 32px;
+
+      background: rgba(12, 20, 16, 0.96);
+
+      border: 1px solid #285342;
+
+      border-radius: 24px;
+
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.65);
+
+      backdrop-filter: blur(15px);
     }
 
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-top: 10px;
-      cursor: pointer;
+    /* =========================
+       BRAND
+       ========================= */
+
+    .brand {
+      font-size: 36px;
+
+      font-weight: 900;
+
+      letter-spacing: -1.5px;
+
+      margin-bottom: 5px;
     }
 
-    .log {
-      margin-top: 30px;
-      text-align: left;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #ccc;
+    .subtitle {
+      color: #81958c;
+
+      font-size: 15px;
+
+      margin-bottom: 28px;
     }
 
-    .log h3 {
-      margin-bottom: 15px;
+    /* =========================
+       CONNECTION STATUS
+       ========================= */
+
+    .status {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      margin-bottom: 20px;
+
+      color: #9bacA5;
+
+      font-size: 14px;
     }
 
-    .msgItem {
-      background: #f9f9f9;
-      margin-bottom: 12px;
-      padding: 10px;
-      border-radius: 5px;
-      border-left: 4px solid #2196F3;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    .status-dot {
+      width: 11px;
+      height: 11px;
+
+      border-radius: 50%;
+
+      background: #555;
+
+      transition: 0.3s;
     }
 
-    .timestamp {
+    .status-dot.online {
+      background: #00ff88;
+
+      box-shadow:
+        0 0 8px #00ff88,
+        0 0 18px rgba(0, 255, 136, 0.5);
+    }
+
+    .status-dot.error {
+      background: #ff4d4d;
+
+      box-shadow:
+        0 0 10px rgba(255, 77, 77, 0.6);
+    }
+
+    /* =========================
+       MESSAGE BOX
+       ========================= */
+
+    .message-wrapper {
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+
+      height: 145px;
+
+      resize: none;
+
+      padding: 17px;
+
+      border-radius: 15px;
+
+      border: 1px solid #315648;
+
+      background: #050806;
+
+      color: white;
+
+      font-size: 17px;
+
+      line-height: 1.5;
+
+      outline: none;
+
+      transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+    }
+
+    textarea::placeholder {
+      color: #53665e;
+    }
+
+    textarea:focus {
+      border-color: #00ff88;
+
+      box-shadow:
+        0 0 0 2px rgba(0, 255, 136, 0.08),
+        0 0 25px rgba(0, 255, 136, 0.05);
+    }
+
+    /* =========================
+       CHARACTER COUNTER
+       ========================= */
+
+    .counter {
+      text-align: right;
+
+      color: #50635b;
+
       font-size: 12px;
-      color: #777;
-      margin-top: 5px;
+
+      margin-top: 6px;
+    }
+
+    /* =========================
+       SEND BUTTON
+       ========================= */
+
+    .send-button {
+      width: 100%;
+
+      margin-top: 15px;
+
+      padding: 16px;
+
+      border: none;
+
+      border-radius: 15px;
+
+      background: #00ff88;
+
+      color: #00140b;
+
+      font-size: 15px;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        opacity 0.15s;
+    }
+
+    .send-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+
+      box-shadow:
+        0 10px 30px rgba(0, 255, 136, 0.18);
+    }
+
+    .send-button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .send-button:disabled {
+      opacity: 0.35;
+
+      cursor: not-allowed;
+    }
+
+    /* =========================
+       RESULT MESSAGE
+       ========================= */
+
+    .result {
+      min-height: 25px;
+
+      margin-top: 18px;
+
+      color: #91a79e;
+
+      font-size: 14px;
+    }
+
+    .result.success {
+      color: #00ff88;
+    }
+
+    .result.error {
+      color: #ff7070;
+    }
+
+    /* =========================
+       INFO BOX
+       ========================= */
+
+    .info {
+      margin-top: 18px;
+
+      padding: 13px;
+
+      border-radius: 12px;
+
+      border: 1px solid #1c332a;
+
+      background: rgba(0, 0, 0, 0.15);
+
+      color: #687d74;
+
+      font-size: 12px;
+
+      line-height: 1.6;
+    }
+
+    .info strong {
+      color: #91a79e;
+    }
+
+    /* =========================
+       FOOTER
+       ========================= */
+
+    .footer {
+      text-align: center;
+
+      color: #4e6259;
+
+      font-size: 11px;
+
+      margin-top: 22px;
+    }
+
+    /* =========================
+       MOBILE
+       ========================= */
+
+    @media (max-width: 500px) {
+
+      .container {
+        padding: 24px;
+
+        border-radius: 20px;
+      }
+
+      .brand {
+        font-size: 30px;
+      }
+
+      textarea {
+        height: 130px;
+      }
+
     }
   </style>
 </head>
+
+
 <body>
 
-  <h1>Send Message to Robot Ratri</h1>
-  <input type="text" id="messageInput" placeholder="Type your message..." />
-  <br>
-  <button onclick="sendMessage()">Send</button>
-  <p id="status"></p>
 
-  <div class="log">
-    <h3>Last 10 Messages</h3>
-    <div id="messageHistory"></div>
-  </div>
+  <main class="container">
 
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCGYGYFp0iZWyRNXeeODW-DAus_nLu-irc",
-      authDomain: "esp32-5732a.firebaseapp.com",
-      databaseURL: "https://esp32-5732a-default-rtdb.firebaseio.com",
-      projectId: "esp32-5732a",
-      storageBucket: "esp32-5732a.appspot.com",
-      messagingSenderId: "541572294985",
-      appId: "1:541572294985:web:ed0931071cb05f839c1298"
-    };
+    <!-- BRAND -->
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    <div class="brand">
+      Moja v3.6
+    </div>
 
-    async function sendMessage() {
-      const newMsg = document.getElementById("messageInput").value.trim();
-      if (!newMsg) return;
+    <div class="subtitle">
+      Send a message to Moja v3.6
+    </div>
 
-      const status = document.getElementById("status");
 
-      try {
-        const snap = await get(ref(db));
-        const data = snap.exists() ? snap.val() : {};
+    <!-- CONNECTION STATUS -->
 
-        let updates = {};
+    <div class="status">
 
-        // Shift messages and timestamps
-        for (let i = 9; i >= 1; i--) {
-          updates["/messageOld" + (i + 1)] = data["messageOld" + i] || "";
-          updates["/timeOld" + (i + 1)] = data["timeOld" + i] || "";
-        }
+      <div
+        id="statusDot"
+        class="status-dot">
+      </div>
 
-        // Current becomes old
-        updates["/messageOld1"] = data["message"] || "";
-        updates["/timeOld1"] = data["time"] || "";
+      <span id="statusText">
+        Connecting to Moja...
+      </span>
 
-        // New message + time
-        updates["/message"] = newMsg;
-        updates["/time"] = new Date().toLocaleString("en-GB");
+    </div>
 
-        await update(ref(db), updates);
 
-        status.textContent = "✅ Message sent!";
-        document.getElementById("messageInput").value = "";
-        showMessages();
-      } catch (err) {
-        status.textContent = "❌ Error: " + err.message;
+    <!-- MESSAGE -->
+
+    <div class="message-wrapper">
+
+      <textarea
+        id="messageInput"
+        maxlength="120"
+        placeholder="Type a message for Moja..."
+      ></textarea>
+
+    </div>
+
+
+    <!-- CHARACTER COUNTER -->
+
+    <div class="counter">
+
+      <span id="characterCount">
+        0
+      </span>
+
+      / 120
+
+    </div>
+
+
+    <!-- SEND -->
+
+    <button
+      id="sendButton"
+      class="send-button"
+      disabled
+    >
+
+      SEND TO Moja v3.06
+
+    </button>
+
+
+    <!-- RESULT -->
+
+    <div
+      id="result"
+      class="result">
+    </div>
+
+
+    <!-- INFO -->
+
+    <div class="info">
+
+      <strong>Moja v3.6 Network</strong>
+      <br>
+
+      Topic:
+      <strong>moja-v3.6/message</strong>
+
+      <br>
+
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+      Moja v3.6 • Yeah Moja Technologies
+
+    </div>
+
+
+  </main>
+
+
+  <script>
+
+
+    /*
+    ============================================================
+                        MOJA v3.6 MQTT
+    ============================================================
+    */
+
+
+    /*
+    Your HiveMQ WebSocket address
+    */
+
+    const BROKER =
+      "wss://eedd8d46186c44a28d4a38dcefb6d4f8.s1.eu.hivemq.cloud:8884/mqtt";
+
+
+    /*
+    IMPORTANT:
+
+    Put your HiveMQ username here.
+    */
+
+    const MQTT_USERNAME =
+      "protiva123";
+
+
+    /*
+    Put your HiveMQ password here.
+    */
+
+    const MQTT_PASSWORD =
+      "protiva1234";
+
+
+    /*
+    Message topic.
+
+    The ESP32 will subscribe to EXACTLY
+    this same topic.
+    */
+
+    const MQTT_TOPIC =
+      "moja-v3.6/message";
+
+
+    /*
+    ============================================================
+                        GET HTML ELEMENTS
+    ============================================================
+    */
+
+    const statusDot =
+      document.getElementById("statusDot");
+
+    const statusText =
+      document.getElementById("statusText");
+
+    const sendButton =
+      document.getElementById("sendButton");
+
+    const messageInput =
+      document.getElementById("messageInput");
+
+    const characterCount =
+      document.getElementById("characterCount");
+
+    const result =
+      document.getElementById("result");
+
+
+    /*
+    ============================================================
+                        CHARACTER COUNTER
+    ============================================================
+    */
+
+    messageInput.addEventListener(
+      "input",
+      function () {
+
+        characterCount.textContent =
+          messageInput.value.length;
+
       }
-    }
-    window.sendMessage = sendMessage;
+    );
 
-    async function showMessages() {
-      const snap = await get(ref(db));
-      const data = snap.exists() ? snap.val() : {};
-      const history = document.getElementById("messageHistory");
-      history.innerHTML = "";
 
-      const all = [{ msg: data.message, time: data.time }].concat(
-        [...Array(9)].map((_, i) => ({
-          msg: data["messageOld" + (i + 1)] || "",
-          time: data["timeOld" + (i + 1)] || ""
-        }))
+    /*
+    ============================================================
+                        MQTT CONNECTION
+    ============================================================
+    */
+
+    const client =
+      mqtt.connect(
+        BROKER,
+        {
+
+          username:
+            MQTT_USERNAME,
+
+          password:
+            MQTT_PASSWORD,
+
+          clientId:
+            "moja-web-" +
+            Math.random()
+              .toString(16)
+              .substring(2),
+
+          clean:
+            true,
+
+          reconnectPeriod:
+            2000,
+
+          connectTimeout:
+            10000
+
+        }
       );
 
-      all.forEach(({ msg, time }) => {
-        if (msg) {
-          const div = document.createElement("div");
-          div.className = "msgItem";
-          div.innerHTML = `<strong>${msg}</strong><div class="timestamp">${time}</div>`;
-          history.appendChild(div);
+
+    /*
+    ============================================================
+                        CONNECTED
+    ============================================================
+    */
+
+    client.on(
+      "connect",
+      function () {
+
+        console.log(
+          "Moja v3.6 MQTT connected!"
+        );
+
+
+        statusDot.classList.remove(
+          "error"
+        );
+
+        statusDot.classList.add(
+          "online"
+        );
+
+
+        statusText.textContent =
+          "Connected to Moja network";
+
+
+        sendButton.disabled =
+          false;
+
+
+        result.textContent =
+          "🟢 Moja is ready";
+
+
+        result.className =
+          "result";
+
+      }
+    );
+
+
+    /*
+    ============================================================
+                        RECONNECTING
+    ============================================================
+    */
+
+    client.on(
+      "reconnect",
+      function () {
+
+        console.log(
+          "Reconnecting..."
+        );
+
+
+        statusDot.classList.remove(
+          "online"
+        );
+
+
+        statusText.textContent =
+          "Reconnecting to Moja...";
+
+
+        sendButton.disabled =
+          true;
+
+
+        result.textContent =
+          "Connecting...";
+
+
+        result.className =
+          "result";
+
+      }
+    );
+
+
+    /*
+    ============================================================
+                        OFFLINE
+    ============================================================
+    */
+
+    client.on(
+      "offline",
+      function () {
+
+        statusDot.classList.remove(
+          "online"
+        );
+
+
+        statusText.textContent =
+          "Moja network offline";
+
+
+        sendButton.disabled =
+          true;
+
+      }
+    );
+
+
+    /*
+    ============================================================
+                        ERROR
+    ============================================================
+    */
+
+    client.on(
+      "error",
+      function (error) {
+
+        console.error(
+          "MQTT ERROR:",
+          error
+        );
+
+
+        statusDot.classList.remove(
+          "online"
+        );
+
+
+        statusDot.classList.add(
+          "error"
+        );
+
+
+        statusText.textContent =
+          "MQTT connection error";
+
+
+        sendButton.disabled =
+          true;
+
+
+        result.textContent =
+          "❌ Unable to connect";
+
+
+        result.className =
+          "result error";
+
+      }
+    );
+
+
+    /*
+    ============================================================
+                        SEND MESSAGE
+    ============================================================
+    */
+
+    function sendMessage() {
+
+
+      const message =
+        messageInput.value.trim();
+
+
+      /*
+      Don't send empty messages.
+      */
+
+      if (!message) {
+
+        result.textContent =
+          "⚠️ Type a message first.";
+
+        result.className =
+          "result error";
+
+        return;
+
+      }
+
+
+      /*
+      Check MQTT connection.
+      */
+
+      if (!client.connected) {
+
+        result.textContent =
+          "❌ Moja is not connected.";
+
+        result.className =
+          "result error";
+
+        return;
+
+      }
+
+
+      /*
+      Disable button while sending.
+      */
+
+      sendButton.disabled =
+        true;
+
+
+      result.textContent =
+        "Sending to Moja...";
+
+
+      result.className =
+        "result";
+
+
+      /*
+      Publish message.
+      */
+
+      client.publish(
+
+        MQTT_TOPIC,
+
+        message,
+
+        {
+
+          /*
+          QoS 1 means:
+          MQTT broker acknowledges delivery.
+          */
+
+          qos: 1,
+
+          /*
+          Retain the latest message.
+
+          When the ESP32 reconnects,
+          it can receive the latest message.
+          */
+
+          retain: true
+
+        },
+
+
+        function (error) {
+
+
+          sendButton.disabled =
+            false;
+
+
+          if (error) {
+
+            console.error(
+              "Publish error:",
+              error
+            );
+
+
+            result.textContent =
+              "❌ Message failed.";
+
+            result.className =
+              "result error";
+
+            return;
+
+          }
+
+
+          /*
+          SUCCESS
+          */
+
+          result.textContent =
+            "✓ Message sent to Moja";
+
+
+          result.className =
+            "result success";
+
+
+          /*
+          Clear message box.
+          */
+
+          messageInput.value =
+            "";
+
+
+          characterCount.textContent =
+            "0";
+
         }
-      });
+
+      );
+
     }
 
-    showMessages();
+
+    /*
+    ============================================================
+                    BUTTON CLICK
+    ============================================================
+    */
+
+    sendButton.addEventListener(
+      "click",
+      sendMessage
+    );
+
+
+    /*
+    ============================================================
+                    ENTER TO SEND
+    ============================================================
+    */
+
+    messageInput.addEventListener(
+      "keydown",
+      function (event) {
+
+        /*
+        Enter = send
+        Shift + Enter = new line
+        */
+
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+
+          event.preventDefault();
+
+          sendMessage();
+
+        }
+
+      }
+    );
+
+
   </script>
+
 </body>
 </html>
